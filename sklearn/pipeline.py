@@ -80,7 +80,7 @@ class Pipeline(BaseEstimator):
     >>> # and a parameter 'C' of the svm
     >>> anova_svm.set_params(anova__k=10, svc__C=.1).fit(X, y)
     ...                        # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
-    Pipeline(cache=False, steps=[...])
+    Pipeline(cache=True, steps=[...])
     >>> prediction = anova_svm.predict(X)
     >>> anova_svm.score(X, y)                        # doctest: +ELLIPSIS
     0.77...
@@ -112,7 +112,7 @@ class Pipeline(BaseEstimator):
 
     # BaseEstimator interface
 
-    def __init__(self, steps, cache=False):
+    def __init__(self, steps, cache=True):
         self.cache = cache
 
         self.named_steps = dict(steps)
@@ -160,7 +160,11 @@ class Pipeline(BaseEstimator):
             name, transform = step
             fit_params = fit_params_steps[name]
             Xt, fitted = self._fit_transform(transform, Xt, y, **fit_params)
-            self.steps[i] = (name, fitted)  # store fitted estimator
+
+            # store fitted estimator
+            self.steps[i] = (name, fitted)
+            self.named_steps[name] = fitted
+
         return Xt, fit_params_steps[self.steps[-1][0]]
 
     def fit(self, X, y=None, **fit_params):
@@ -263,6 +267,7 @@ class Pipeline(BaseEstimator):
     def _set_last_estimator(self, estimator):
         name, _ = self.steps[-1]
         self.steps[-1] = (name, estimator)
+        self.named_steps[name] = estimator
 
     @property
     def classes_(self):
@@ -308,7 +313,7 @@ def make_pipeline(*steps):
     >>> from sklearn.preprocessing import StandardScaler
     >>> make_pipeline(StandardScaler(), GaussianNB())
     ...                     # doctest: +NORMALIZE_WHITESPACE
-    Pipeline(cache=False,
+    Pipeline(cache=True,
          steps=[('standardscaler', StandardScaler(copy=True,
             with_mean=True, with_std=True)),
             ('gaussiannb', GaussianNB())])
